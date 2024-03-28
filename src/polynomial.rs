@@ -12,13 +12,15 @@ impl<F: Field> MultiVarMonomial<F> {
     }
 
     pub fn num_vars(&self) -> usize {
-        self.power.iter().fold(0, |acc, element| acc + element)
+        self.power.iter().sum::<usize>()
     }
 
     pub fn evaluate(&self, input: &[F]) -> F {
         let mut mul = self.coefficient;
-        for value in input {
-            mul = mul * value
+        for (i, value) in input.iter().enumerate() {
+            if self.power[i] == 1 {
+                mul *= value
+            }
         }
         mul
     }
@@ -30,19 +32,24 @@ pub struct MultilinearPolynomial<F: Field> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use ark_ff::{BigInteger, Field, PrimeField, Zero};
-    use ark_test_curves::{
-        bls12_381::{Fr as F, FrConfig},
-        secp256k1::Fr,
-    };
+
+    use super::MultiVarMonomial;
+
+    use ark_test_curves::bls12_381::Fr as F;
 
     #[test]
     fn monomial_test() {
         let power = vec![1, 1, 0];
         let a = F::from(10);
+        let b = F::from(10);
 
+        let c = a + b;
         
-        let term = MultiVarMonomial::<F>::new(F::from(10), power);
+        let coeff = F::from(10);
+
+        let term = MultiVarMonomial::<F>::new(coeff, power);
+        let ans = term.evaluate(&[a, b, c]);
+
+        assert_eq!(ans, a * b * coeff);
     }
 }
